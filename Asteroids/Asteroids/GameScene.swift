@@ -15,9 +15,10 @@ class GameScene: SKScene ,SKPhysicsContactDelegate {
     var player:SKSpriteNode!
     var scoreLabel:SKLabelNode! // надпись на экране
     var lifeLabel : SKLabelNode!
+    var check :Int = 0
     var life:Int = 4 {
         didSet{
-            lifeLabel.text = "Жизни:\(life)"
+            lifeLabel.text = "Жизнь:\(life)"
         }
     }
     var score:Int = 0 {//создаем вспомогательную пременную
@@ -43,8 +44,10 @@ class GameScene: SKScene ,SKPhysicsContactDelegate {
         
         player = SKSpriteNode(imageNamed: "shuttle") //добавление игрока
         player.position = CGPoint(x: UIScreen.main.bounds.width / 2,y: 40)
+        player.physicsBody = SKPhysicsBody(rectangleOf: player.size)
         player.physicsBody?.categoryBitMask = playerCategory
         player.physicsBody?.contactTestBitMask = alienCategory
+        player.physicsBody?.collisionBitMask = 0
         player.physicsBody?.usesPreciseCollisionDetection = true
         self.addChild(player)
         
@@ -53,19 +56,19 @@ class GameScene: SKScene ,SKPhysicsContactDelegate {
         
         scoreLabel = SKLabelNode(text:"Счет:0")//отображение
         scoreLabel.fontName = "AmericanTypewriter-Bold"//установка шрифта надписи
-        scoreLabel.fontSize = 36 //установка размера
+        scoreLabel.fontSize = 23 //установка размера
         scoreLabel.fontColor =  UIColor.red
-        scoreLabel.position = CGPoint(x:100,y: UIScreen.main.bounds.height - 50)
+        scoreLabel.position = CGPoint(x:60,y: UIScreen.main.bounds.height - 60)
         score = 0
         
         self.addChild(scoreLabel)
         
-        lifeLabel = SKLabelNode(text:"Жизни:4")//отображение
+        lifeLabel = SKLabelNode(text:"Жизнь:4")//отображение
         lifeLabel.fontName = "AmericanTypewriter-Bold"//установка шрифта надписи
-        lifeLabel.fontSize = 36 //установка размера
+        lifeLabel.fontSize = 30 //установка размера
         lifeLabel.fontColor =  UIColor.red
-        lifeLabel.position = CGPoint(x:270,y: UIScreen.main.bounds.height -
-            50)
+        lifeLabel.position = CGPoint(x:280,y: UIScreen.main.bounds.height -
+            60)
         life = 4
         self.addChild(lifeLabel)
         
@@ -104,48 +107,48 @@ class GameScene: SKScene ,SKPhysicsContactDelegate {
     }// удаление с помощью таймера
     
     score += 50
+    if (score - check == 10000)
+    {
+        check = score
+        life += 1
+    }
     }
     
-    func testMylifeElements(){ // проверка на жизнь
+    func testMylifeElements(alienNode:SKSpriteNode){ // проверка на жизнь
     if (life > 0)
     {
+        let explosion2 = SKEmitterNode(fileNamed: "Vzriv")
+        explosion2?.position = alienNode.position
+        self.addChild(explosion2!)
+         self.run(SKAction.playSoundFileNamed("vzriv.mp3", waitForCompletion: false))
+        alienNode.removeFromParent()
         life -= 1
         
     }else {
         exit(0)
     }
     }
-    func didBegin(contact :SKPhysicsContact)
-    {
-        var alienBody:SKPhysicsBody
-        var playerBody:SKPhysicsBody
-        
-        playerBody = contact.bodyA
-        alienBody = contact.bodyB
-        
-        if (alienBody.categoryBitMask & alienCategory) != 0  && (playerBody.categoryBitMask & playerCategory != 0)
-        {
-           testMylifeElements()
-        }//проверка если два тела столкнулись , то мы ничег
-       
-        
-    }
+    
      func didBegin(_ contact: SKPhysicsContact) {// функция сталкнивания друг с другим
-        var alienBody:SKPhysicsBody
-        var bulletBody:SKPhysicsBody
+        var firstBody:SKPhysicsBody
+        var secondBody:SKPhysicsBody
         
         if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask { //функция сравнивает и понимаеь кто патрон а кто враг
-            bulletBody = contact.bodyA // обозначение врага
-            alienBody = contact.bodyB //обозначение патрона
+            secondBody = contact.bodyA //
+            firstBody = contact.bodyB //
         } else { // иначе меняем значение(другой вариаент)
-            bulletBody = contact.bodyB
-            alienBody = contact.bodyA
+            secondBody = contact.bodyB
+            firstBody = contact.bodyA
         }
         
-        if (alienBody.categoryBitMask & alienCategory) != 0  && (bulletBody.categoryBitMask & bulletCategory != 0)
+        if (firstBody.categoryBitMask == alienCategory)  && (secondBody.categoryBitMask == bulletCategory )
         {
-            collisionElements(bulletNode:bulletBody.node as! SKSpriteNode,alienNode:alienBody.node as! SKSpriteNode)
+            collisionElements(bulletNode:secondBody.node as! SKSpriteNode,alienNode:firstBody.node as! SKSpriteNode)
         }//проверка если два тела столкнулись , то мы ничего не делаем
+        
+        if firstBody.categoryBitMask == playerCategory && secondBody.categoryBitMask == alienCategory {
+          testMylifeElements(alienNode: secondBody.node as! SKSpriteNode)
+        }
     }
     
     @objc func addAlien (){//функция добавления игрока
