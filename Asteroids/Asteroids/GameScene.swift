@@ -180,7 +180,7 @@ class GameScene: SKScene ,SKPhysicsContactDelegate {
     }
     
     func fireBullet () {// функция при выпускания огня и выстрела
-        self.run(SKAction.playSoundFileNamed("vzriv.mp3",waitForCompletion:false)) // установка звука при выстрела
+        self.run(SKAction.playSoundFileNamed("bullet.mp3",waitForCompletion:false)) // установка звука при выстрела
         let bullet = SKSpriteNode(imageNamed: "torpedo")//устанволение картинки выстрела
         bullet.position = player.position//установка позиция
         bullet.position.y += 5
